@@ -18,17 +18,20 @@ import ttk as ttkstyle
 from matplotlib import style
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-
+Configurations_path = os.getcwd() + '\\Configurations\\'
+print Configurations_path
 plt.switch_backend('TkAgg')
-version = '1.0 Alpha'
+version = '1.0.1 Alpha'
 fig1 = plt.figure()
 ax1 = fig1.add_subplot(121)
 div = make_axes_locatable(ax1)
 cax = div.append_axes('right', '5%', '5%')
-ax2 = fig1.add_subplot(122,projection='3d')
+ax2 = fig1.add_subplot(122, projection='3d')
 mng = plt.get_current_fig_manager()
 mng.window.state('zoomed')
 q = 2
+
+
 class Charge:
     """
     Defines the data type for a charge
@@ -40,7 +43,8 @@ class Charge:
         self.charge = charge  # This is the charge in coulombs for the charge.
 
 
-def factor_b_closest_a(a,b):  # Deletes all factors greater than a, even if a factor of b is closer to a than to the next factor i < b.
+def factor_b_closest_a(a,
+                       b):  # Deletes all factors greater than a, even if a factor of b is closer to a than to the next factor i < b.
     """
     Returns the factor of b closest to a
     :param a: int, looking for factor closest too
@@ -53,6 +57,7 @@ def factor_b_closest_a(a,b):  # Deletes all factors greater than a, even if a fa
     q = [i for i in distance if i >= 0]  # removes all factors which are larger than i
     return factors[q.index(min(q))]  # returns the factor of minimum distance.
 
+
 def create_levels(potentials, n, rng, res):  # Contains unused parameter
     """
     This defines the location of the equipotential lines in the plot.
@@ -63,6 +68,7 @@ def create_levels(potentials, n, rng, res):  # Contains unused parameter
     :return: list of levels.
     """
     return sorted([potentials[((res / n)) * i][((res / n)) * i] for i in range(0, n)])  #
+
 
 def create_meshgrid(resolution, data):
     """
@@ -96,12 +102,14 @@ def create_meshgrid(resolution, data):
             np.linspace(-1.1 * abs(min(i.y for i in data)), 1.1 * abs(max(i.y for i in data)), resolution))
     return grid_x, grid_y
 
+
 def generate_potential(data, grid_x, grid_y):
     try:
         potential = sum([(9e9 * i.charge) / np.sqrt((i.x - grid_x) ** 2 + (i.y - grid_y) ** 2) for i in data])
     except RuntimeWarning:
         print 'Warning 2001: Encountered a division by 0, passing.'
     return potential
+
 
 def generate_vectors(grid_x, grid_y, data):
     """
@@ -124,6 +132,7 @@ def generate_vectors(grid_x, grid_y, data):
         print 'Warning 2002: Encountered division by 0, passing.'
         pass
     return grid_u, grid_v
+
 
 def print_charges(data):
     print str(datetime.datetime.now())
@@ -159,11 +168,13 @@ def print_charges(data):
 
     return True
 
+
 def get_inputs(base_charges, base_resolution):
     """
     Gets the necessary inputs for the program
     :return: (data),resolution
     """
+    global Configurations_path
     input_finished = False
     charges = base_charges
     resolution = base_resolution
@@ -173,7 +184,7 @@ def get_inputs(base_charges, base_resolution):
         correct_input = False
         while correct_input is False:
             correct_input = True
-            selection = raw_input("Add, info, exit, Delete, Continue, Resolution: ")
+            selection = raw_input("Add, Advanced, Import, exit, Delete, Continue: ")
             if selection == 'add' or selection == 'Add' or selection == 'new':
                 try:
                     charges.append(Charge(float(raw_input('What is the x position of the charge? ')),
@@ -182,6 +193,108 @@ def get_inputs(base_charges, base_resolution):
                 except ValueError:
                     print "Error 0001: Input must be a floating point number."
                     correct_input = False
+            elif selection == "Advanced" or selection == 'advanced' or selection == 'options':
+                advanced_loop = False
+                while advanced_loop == False:
+                    os.system('cls')
+                    print '[0] Change Configuration Path\n[1] System Info\n[2] Change Resolution\n[Enter] Back...'
+                    adv_selection = raw_input('Which option to you wish to configure? ')
+                    if adv_selection == '0' or adv_selection == 'Change Configuration Path':
+                        os.system('cls')
+                        config_path_loop = False
+                        while config_path_loop == False:
+                            print "Current Configuration Path: (%s) Current Working Directory: (%s) " % (
+                            Configurations_path, os.getcwd())
+                            new_path = raw_input("New Configuration Path (Must be from CWD): ")
+                            if os.path.isdir(os.getcwd() + new_path) == True:
+                                Configurations_path = new_path
+                                config_path_loop = True
+                            elif new_path == 'back':
+                                config_path_loop = True
+                            else:
+                                print "Input failed, the path was not existant."
+                                config_path_loop = False
+                    elif adv_selection == '1' or adv_selection == "System Info":
+                        os.system('cls')
+                        print "Publisher: Boolean Designs"
+                        print "Build Lead: Nathan Diggins"
+                        print "EFAPI Version: %s" % version
+                        print "Computer Name: %s" % platform.node()
+                        print "OS type: %s" % platform.system()
+                        waiter = raw_input('Press any key to continue: ')
+                    elif adv_selection == '2' or adv_selection == "Change Resolution":
+                        try:
+                            print "Current Resolution: %s" % (str(resolution))
+                            resolution = int(raw_input('New Resolution: '))
+                        except ValueError:
+                            print "Must be a number."
+                    elif adv_selection == '' or adv_selection == 'back':
+                        advanced_loop = True
+                    else:
+                        print "Invalid Input"
+                        advanced_loop = False
+            elif selection == 'Import' or selection == 'import' or selection == 'i':
+                """
+
+                This allows users to upload large data sets to the program without manual input
+
+                """
+                data_sets = os.listdir(Configurations_path)  # Lists all of the potential data files
+                print "Found %s data sets in current configurations folder (%s). Configuration file can be changed in " \
+                      "advanced settings. " % (str(len(data_sets)), Configurations_path)
+                for file in data_sets:
+                    print '[%s] Name: %s | Ext: %s' % (str(data_sets.index(file)),
+                                                       file.split('.')[0],
+                                                       file.split('.')[1])
+                """
+
+                Starts the file selection while loop
+
+                """
+                file_selection_loop = False
+                while file_selection_loop == False:
+                    selected_file = raw_input("Which file number do you wish to import? Enter 'exit' to go back: ")
+                    try:
+                        if selected_file == 'exit':
+                            file_selection_loop = True
+                        elif int(selected_file) <= len(data_sets) - 1 and int(selected_file) > -1:
+                            """
+                            File number exists and can be accessed
+
+                            """
+                            print Configurations_path + data_sets[int(selected_file)]
+                            data_set = open(Configurations_path + data_sets[int(selected_file)], 'r+')
+                            """
+                            Has found and opened file
+
+                            """
+                            print 'Selected file %s.' % (selected_file)
+                            file_data = data_set.read().split('\n')
+                            print "Found %s charges in data set." % (str(len(file_data)))
+                            for charge in file_data:
+                                temp_charge = charge.split(',')
+                                if len(temp_charge) != 3:
+                                    raise SyntaxError("Dataset improperly formatted")
+                                else:
+                                    pass
+                                charges.append(Charge(int(temp_charge[0]), int(temp_charge[1]), int(temp_charge[2])))
+                            print "File successfully imported"
+                            file_selection_loop = True
+                        else:
+                            print "Selection was invalid, must correspond to a listed number."
+                            file_selection_loop = False
+                    except ValueError:
+                        print "Input must be a number."
+                        file_selection_loop = False
+                    except IOError:
+                        print "File has been moved or deleted."
+                        file_selection_loop = False
+                    except SyntaxError:
+                        print "Please review the data structure in the readme.txt"
+                        file_selection_loop = False
+                    except WindowsError:
+                        print "Configuration Path is incorrect, please reconfigure."
+                        file_selection_loop = False
             elif selection == 'Delete' or selection == 'delete' or selection == 'del':
                 try:
                     del (charges[int(raw_input("Which charge do you wish to delete? ")) - 1])
@@ -191,13 +304,6 @@ def get_inputs(base_charges, base_resolution):
             elif selection == 'Exit' or selection == 'Done' or selection == 'finish' or selection == 'exit':
                 print "Exiting the Electrical Field API"
                 exit()
-            elif selection == 'Info' or selection == 'info':
-                print "Publisher: Boolean Designs"
-                print "Build Lead: Nathan Diggins"
-                print "EFAPI Version: %s"  % version
-                print "Computer Name: %s" % platform.node()
-                print "OS type: %s" % platform.system()
-                waiter = raw_input('Press any key to continue: ')
             elif selection == 'Continue' or selection == '' or selection == 'go':
                 return charges, resolution
             elif selection == 'res' or selection == 'resolution':
@@ -210,6 +316,7 @@ def get_inputs(base_charges, base_resolution):
                 print 'Error 0004: Input was improper. '
                 correct_input = False
 
+
 def create_graph(data, detail):
     ax1.clear()
     m_grid = create_meshgrid(detail, data)
@@ -217,7 +324,7 @@ def create_graph(data, detail):
     # Plotting the charges
     color = np.log(np.sqrt(e_vectors[0] ** 2 + e_vectors[1] ** 2))
     stream_plot = ax1.streamplot(m_grid[0], m_grid[1], e_vectors[0], e_vectors[1], density=q, color=color,
-                                cmap=plt.cm.inferno)
+                                 cmap=plt.cm.inferno)
     cont_plot_data = generate_potential(data, m_grid[0], m_grid[1])
     levels = create_levels(cont_plot_data, factor_b_closest_a(10, detail), [np.amin(m_grid[0]), np.amax(m_grid[0])],
                            detail)
@@ -230,11 +337,11 @@ def create_graph(data, detail):
         contour_plot = ax1.contour(m_grid[0], m_grid[1], generate_potential(data, m_grid[0], m_grid[1]), 10, colors='r')
     elif p.values().count(1) >= len(levels) / 2:
         contour_plot = ax1.contour(m_grid[0], m_grid[1], generate_potential(data, m_grid[0], m_grid[1]), levels=levels,
-                                  colors='r')
+                                   colors='r')
     else:
         raise ArithmeticError("Error 3001: Failed to determine equipotentiality")
     cax.cla()
-    plt.colorbar(stream_plot.lines,cax=cax)
+    plt.colorbar(stream_plot.lines, cax=cax)
     # Plotting the Particles
     for i in data:
         if i.charge > 0:
@@ -270,21 +377,21 @@ def create_graph(data, detail):
     ax2.mouse_init()
     ax2.grid()
 
+
 def animate(i):
     """
     This function animates the graph
     :param i:
     :return:
     """
-    inputs = get_inputs(charges,resolution)
+    inputs = get_inputs(charges, resolution)
     ax1.cla()
     ax2.cla()
-    create_graph(inputs[0],inputs[1])
-
+    create_graph(inputs[0], inputs[1])
 
 
 animations = []
-charges = [Charge(0.0,0.0,1.0)]
+charges = [Charge(0.0, 0.0, 1.0)]
 resolution = 50
 ani = animation.FuncAnimation(fig1, animate, interval=1000)
 plt.show()
