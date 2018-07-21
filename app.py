@@ -1,6 +1,9 @@
 """
 IMPORTS
 """
+
+import datetime
+import platform
 import os
 import matplotlib
 from collections import Counter
@@ -13,10 +16,18 @@ import numpy as np
 import tkinter as tk
 import ttk as ttkstyle
 from matplotlib import style
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
+
+plt.switch_backend('TkAgg')
+version = '1.0 Alpha'
 fig1 = plt.figure()
-ax1 = fig1.add_subplot(111)
-ax2 = fig1.add_subplot(111, projection='3d')
+ax1 = fig1.add_subplot(121)
+div = make_axes_locatable(ax1)
+cax = div.append_axes('right', '5%', '5%')
+ax2 = fig1.add_subplot(122,projection='3d')
+mng = plt.get_current_fig_manager()
+mng.window.state('zoomed')
 q = 2
 class Charge:
     """
@@ -115,6 +126,7 @@ def generate_vectors(grid_x, grid_y, data):
     return grid_u, grid_v
 
 def print_charges(data):
+    print str(datetime.datetime.now())
     if len(data) == 0:
         print "No Charges"
         return False
@@ -161,8 +173,8 @@ def get_inputs(base_charges, base_resolution):
         correct_input = False
         while correct_input is False:
             correct_input = True
-            selection = raw_input("Add,Delete,Continue,Resolution: ")
-            if selection == 'add' or selection == 'Add':
+            selection = raw_input("Add, info, exit, Delete, Continue, Resolution: ")
+            if selection == 'add' or selection == 'Add' or selection == 'new':
                 try:
                     charges.append(Charge(float(raw_input('What is the x position of the charge? ')),
                                           float(raw_input("What is the y position of the charge? ")),
@@ -170,12 +182,22 @@ def get_inputs(base_charges, base_resolution):
                 except ValueError:
                     print "Error 0001: Input must be a floating point number."
                     correct_input = False
-            elif selection == 'Delete' or selection == 'delete':
+            elif selection == 'Delete' or selection == 'delete' or selection == 'del':
                 try:
                     del (charges[int(raw_input("Which charge do you wish to delete? ")) - 1])
                 except ValueError:
                     print 'Error 0002: Input must be an integer.'
                     correct_input = False
+            elif selection == 'Exit' or selection == 'Done' or selection == 'finish' or selection == 'exit':
+                print "Exiting the Electrical Field API"
+                exit()
+            elif selection == 'Info' or selection == 'info':
+                print "Publisher: Boolean Designs"
+                print "Build Lead: Nathan Diggins"
+                print "EFAPI Version: %s"  % version
+                print "Computer Name: %s" % platform.node()
+                print "OS type: %s" % platform.system()
+                waiter = raw_input('Press any key to continue: ')
             elif selection == 'Continue' or selection == '' or selection == 'go':
                 return charges, resolution
             elif selection == 'res' or selection == 'resolution':
@@ -190,7 +212,6 @@ def get_inputs(base_charges, base_resolution):
 
 def create_graph(data, detail):
     ax1.clear()
-    ax2.clear()
     m_grid = create_meshgrid(detail, data)
     e_vectors = generate_vectors(m_grid[0], m_grid[1], data)
     # Plotting the charges
@@ -212,7 +233,8 @@ def create_graph(data, detail):
                                   colors='r')
     else:
         raise ArithmeticError("Error 3001: Failed to determine equipotentiality")
-    plt.colorbar(stream_plot.lines)
+    cax.cla()
+    plt.colorbar(stream_plot.lines,cax=cax)
     # Plotting the Particles
     for i in data:
         if i.charge > 0:
@@ -235,9 +257,8 @@ def create_graph(data, detail):
     ax1.yaxis.set_ticks_position('left')
     ax1.grid()
 
-
+    cont_plot_data = generate_potential(data, m_grid[0], m_grid[1])
     surface = ax2.contour3D(m_grid[0], m_grid[1], cont_plot_data, 150, cmap=plt.cm.jet)
-    plt.colorbar(surface)
     ax2.set_xlabel(r'$x$')
     ax2.set_ylabel(r'$y$')
     ax2.set_zlabel(r'$ln(z)$')
@@ -249,17 +270,21 @@ def create_graph(data, detail):
     ax2.mouse_init()
     ax2.grid()
 
-
-def animate():
+def animate(i):
     """
     This function animates the graph
     :param i:
     :return:
     """
     inputs = get_inputs(charges,resolution)
+    ax1.cla()
+    ax2.cla()
     create_graph(inputs[0],inputs[1])
 
-charges = []
+
+
+animations = []
+charges = [Charge(0.0,0.0,1.0)]
 resolution = 50
-ani = animation.FuncAnimation(fig1, animate(), interval=1000)
+ani = animation.FuncAnimation(fig1, animate, interval=1000)
 plt.show()
