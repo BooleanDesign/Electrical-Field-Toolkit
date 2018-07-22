@@ -20,27 +20,40 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 """
 Program setup
 """
-version = '1.2.1 Alpha'
-count = 0
-styles = plt.style.available
-default_style = 'classic'
-os.system('Title Electric Field API %s' % (version))
-image_directory = os.getcwd() + '\\Images\\'
-Configurations_path = os.getcwd() + '\\Configurations\\'
-x_pad = 0.0  # System settings for saving individual subplots
-y_pad = 0.0
-plt.switch_backend('TkAgg')
-fig1 = plt.figure()
-ax1 = fig1.add_subplot(121)
-div = make_axes_locatable(ax1)
-cax = div.append_axes('right', '5%', '5%')
-ax2 = fig1.add_subplot(122, projection='3d')
-mng = plt.get_current_fig_manager()
-mng.window.state('zoomed')
-mng.window.wm_iconbitmap("bin\\EFAPIicon.ico")
-fig1.canvas.set_window_title('Electric Field API %s' %(version))
-q = 2
-
+try:
+    config_file = open(os.getcwd()+'\\bin\\EFAPI.config','r+')
+    config_read = config_file.read()
+    settings = ''
+    for char in config_read:
+        if char =='[' or char==']' or char=='{' or char=='}':
+            pass
+        else:
+            settings += char
+    settings = dict([n.split('=') for n in settings.split('\n')][:-1])
+    version = settings['version']
+    count = 0
+    styles = plt.style.available
+    default_style = settings['default_style']
+    os.system('Title Electric Field API %s' % (version))
+    image_directory = os.getcwd() + settings['image_directory_extension']
+    Configurations_path = os.getcwd() + settings['configurations_directory_extension']
+    x_pad = float(settings['x_padding_variable'])# System settings for saving individual subplots
+    y_pad = float(settings['y_padding_variable'])
+    plt.switch_backend('TkAgg')
+    fig1 = plt.figure()
+    ax1 = fig1.add_subplot(121)
+    div = make_axes_locatable(ax1)
+    cax = div.append_axes('right', '5%', '5%')
+    ax2 = fig1.add_subplot(122, projection='3d')
+    mng = plt.get_current_fig_manager()
+    mng.window.state('zoomed')
+    mng.window.wm_iconbitmap("bin\\EFAPIicon.ico")
+    fig1.canvas.set_window_title('Electric Field API %s' %(version))
+    q = 2
+except KeyError:
+    print "Critical Failure in Config"
+    waiter = raw_input('Hit any key to exit: ')
+    exit()
 
 class Charge:
     """
