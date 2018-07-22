@@ -21,7 +21,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 Configurations_path = os.getcwd() + '\\Configurations\\'
 print Configurations_path
 plt.switch_backend('TkAgg')
-version = '1.0.1 Alpha'
+version = '1.0.2 Alpha'
 fig1 = plt.figure()
 ax1 = fig1.add_subplot(121)
 div = make_axes_locatable(ax1)
@@ -175,6 +175,7 @@ def get_inputs(base_charges, base_resolution):
     :return: (data),resolution
     """
     global Configurations_path
+    global resolution
     input_finished = False
     charges = base_charges
     resolution = base_resolution
@@ -271,13 +272,14 @@ def get_inputs(base_charges, base_resolution):
                             print 'Selected file %s.' % (selected_file)
                             file_data = data_set.read().split('\n')
                             print "Found %s charges in data set." % (str(len(file_data)))
-                            for charge in file_data:
+                            for charge in file_data[:-1]:
                                 temp_charge = charge.split(',')
                                 if len(temp_charge) != 3:
                                     raise SyntaxError("Dataset improperly formatted")
                                 else:
                                     pass
                                 charges.append(Charge(int(temp_charge[0]), int(temp_charge[1]), int(temp_charge[2])))
+                                data_set.close()
                             print "File successfully imported"
                             file_selection_loop = True
                         else:
