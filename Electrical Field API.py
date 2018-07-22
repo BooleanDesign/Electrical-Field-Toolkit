@@ -20,8 +20,10 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 """
 Program setup
 """
-version = '1.2 Alpha'
+version = '1.2.1 Alpha'
 count = 0
+styles = plt.style.available
+default_style = 'classic'
 os.system('Title Electric Field API %s' % (version))
 image_directory = os.getcwd() + '\\Images\\'
 Configurations_path = os.getcwd() + '\\Configurations\\'
@@ -177,7 +179,7 @@ def print_charges(data):
     return True
 
 
-def get_inputs(base_charges, base_resolution):
+def get_inputs():
     """
     Gets the necessary inputs for the program
     :return: (data),resolution
@@ -190,14 +192,16 @@ def get_inputs(base_charges, base_resolution):
     global image_directory
     global x_pad
     global y_pad
+    global charges
+    global resolution
+    global styles
+    global default_style
     """
 
     Main Loop
 
     """
     input_finished = False
-    charges = base_charges
-    resolution = base_resolution
     if count <= 1:
         # Fixes Continue glitch
         return charges, resolution
@@ -239,7 +243,7 @@ def get_inputs(base_charges, base_resolution):
                 while advanced_loop == False:
                     os.system('cls')
                     print '[0] Change Configuration Path\n[1] System Info\n[2] Change Resolution\n[3]Save Subplot\n' \
-                          '[4]Administrator Settings\n[Enter] Back...'
+                          '[4]Administrator Settings\n[5]Change Graph Style\n[Enter] Back...'
                     adv_selection = raw_input('Which option to you wish to configure? ')
                     if adv_selection == '0' or adv_selection == 'Change Configuration Path':
                         config_path_loop = False
@@ -344,6 +348,19 @@ def get_inputs(base_charges, base_resolution):
                             else:
                                 print "Invalid input."
                                 advanced_settings_loop = False
+                    elif adv_selection == '5' or adv_selection == 'Change Graph Style':
+                        os.system('cls')
+                        print 'Current Style: %s' % (default_style)
+                        print 'Selectable styles:'
+                        for style in styles:
+                            print '[%s] %s' %(styles.index(style),style)
+                        try:
+                            style_selection = int(raw_input('Which style would you like to use?'))
+                            default_style = styles[style_selection]
+                        except ValueError:
+                            print "Not a valid style."
+                            advanced_loop = False
+                            waiter = raw_input('Press any key to continue')
                     else:
                         print "Invalid Input"
                         advanced_loop = False
@@ -530,7 +547,7 @@ def create_graph(data, detail):
     ax1.set_xlabel(r'$x$')
     ax1.set_ylabel(r'$y$')
     ax1.axis([np.amin(m_grid[0]), np.amax(m_grid[0]), np.amin(m_grid[0]), np.amax(m_grid[0])])
-    ax1.set_title(r'$\vec E = \sum_{i=0}^{i=n} k \frac{Q_i}{R^2}$')
+    ax1.set_title('Electrical Field', fontsize='medium')
     ax1.set_aspect('equal', adjustable='box')
     ax1.spines['bottom'].set_position('zero')
     ax1.spines['left'].set_position('zero')
@@ -548,7 +565,7 @@ def create_graph(data, detail):
     ax2.set_xlim(np.amin(m_grid[0]), np.amax(m_grid[1]))
     ax2.set_ylim(np.amin(m_grid[0]), np.amax(m_grid[1]))
     ax2.set_zscale('log', basez=10)
-    ax2.set_title(r'$\vec E = \sum_{i=0}^{i=n} k \frac{Q_i}{R^2}$')
+    ax2.set_title('Electrical Potential', fontsize='medium')
     ax2.set_aspect('equal', adjustable='box')
     ax2.mouse_init()
     ax2.grid()
@@ -561,7 +578,10 @@ def animate(i):
     :return:
     """
     global count
-    inputs = get_inputs(charges, resolution)
+    global default_style
+    global styles
+    inputs = get_inputs()
+    plt.style.use(default_style)
     count += 1
     ax1.cla()
     ax2.cla()
