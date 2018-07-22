@@ -17,8 +17,10 @@ import tkinter as tk
 import ttk as ttkstyle
 from matplotlib import style
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-
+image_directory = os.getcwd() + '\\Images\\'
 Configurations_path = os.getcwd() + '\\Configurations\\'
+x_pad = 0.0 #System settings for saving individual subplots
+y_pad = 0.0
 print Configurations_path
 plt.switch_backend('TkAgg')
 version = '1.0.2 Alpha'
@@ -174,8 +176,19 @@ def get_inputs(base_charges, base_resolution):
     Gets the necessary inputs for the program
     :return: (data),resolution
     """
+    """
+    Global Assignments
+    """
     global Configurations_path
     global resolution
+    global image_directory
+    global x_pad
+    global y_pad
+    """
+
+    Main Loop
+
+    """
     input_finished = False
     charges = base_charges
     resolution = base_resolution
@@ -185,7 +198,7 @@ def get_inputs(base_charges, base_resolution):
         correct_input = False
         while correct_input is False:
             correct_input = True
-            selection = raw_input("Add, Advanced, Import, exit, Delete, Continue: ")
+            selection = raw_input("Add, Advanced, Export, Import, Exit, Delete, Save, Continue: ")
             if selection == 'add' or selection == 'Add' or selection == 'new':
                 try:
                     charges.append(Charge(float(raw_input('What is the x position of the charge? ')),
@@ -198,7 +211,8 @@ def get_inputs(base_charges, base_resolution):
                 advanced_loop = False
                 while advanced_loop == False:
                     os.system('cls')
-                    print '[0] Change Configuration Path\n[1] System Info\n[2] Change Resolution\n[Enter] Back...'
+                    print '[0] Change Configuration Path\n[1] System Info\n[2] Change Resolution\n[3]Save Subplot\n' \
+                          '[4]Administrator Settings\n[Enter] Back...'
                     adv_selection = raw_input('Which option to you wish to configure? ')
                     if adv_selection == '0' or adv_selection == 'Change Configuration Path':
                         os.system('cls')
@@ -231,9 +245,99 @@ def get_inputs(base_charges, base_resolution):
                             print "Must be a number."
                     elif adv_selection == '' or adv_selection == 'back':
                         advanced_loop = True
+                    elif adv_selection == '3' or adv_selection == 'Save Subplot':
+                        os.system('cls')
+                        plot_choice_loop = False
+                        while plot_choice_loop == False:
+                            try:
+                                plot_choice = int(raw_input('Which subplot do you want to save? '))
+                                if plot_choice == 1:
+                                    extent = ax1.get_window_extent().transformed(fig1.dpi_scale_trans.inverted())
+                                    fig1.savefig(image_directory+raw_input('Image file name (.png): '),bbox_inches=extent.expanded(1+x_pad,1+y_pad))
+                                    plot_choice_loop = True
+                                elif plot_choice == 2:
+                                    extent = ax2.get_window_extent().transformed(fig1.dpi_scale_trans.inverted())
+                                    fig1.savefig(image_directory+ raw_input('Image file name (.png): '),
+                                                 bbox_inches=extent.expanded(1 + x_pad, 1 + y_pad))
+                                    plot_choice_loop = True
+                                else:
+                                    print "That is not an eligible subplot."
+                            except IOError:
+                                print "Illegal filename, or directory doesn't exist."
+                                plot_choice_loop = False
+                    elif adv_selection == '4' or adv_selection == 'Advanced Settings':
+                        advanced_settings_loop = False
+                        while advanced_settings_loop == False:
+                            os.system('cls')
+                            print "[0]X Padding for Images\n[1]Y Padding for Images\n[2]Image Directory\n[Enter] Back"
+                            advanced_setting_input = raw_input('Which option do you wish to configure: ')
+                            if advanced_setting_input == '0' or advanced_setting_input == 'X Padding':
+                                os.system('cls')
+                                print "Current configured X Padding variable: %s." % (str(x_pad))
+                                x_pad = float(raw_input('New X_Pad value: '))
+                            elif advanced_setting_input == '1' or advanced_setting_input == 'Y Padding':
+                                os.system('cls')
+                                print "Current configured X Padding variable: %s." % (str(y_pad))
+                                y_pad = float(raw_input('New Y_Pad value: '))
+                            elif advanced_setting_input == '2' or advanced_setting_input == 'Image Directory':
+                                os.system('cls')
+                                config_impath_loop = False
+                                while config_impath_loop == False:
+                                    print "Current Image Path: (%s) Current Working Directory: (%s) " % (
+                                        image_directory, os.getcwd())
+                                    new_path = raw_input("New Configuration Path (Must be from CWD): ")
+                                    if os.path.isdir(os.getcwd() + new_path) == True:
+                                        image_directory = new_path
+                                        config_impath_loop = True
+                                    elif new_path == 'back':
+                                        config_impath_loop = True
+                                    else:
+                                        print "Input failed, the path was not existant."
+                                        config_impath_loop = False
+                            elif advanced_setting_input == '' or advanced_setting_input == 'Back':
+                                advanced_settings_loop = True
+                            else:
+                                print "Invalid input."
+                                advanced_settings_loop = False
                     else:
                         print "Invalid Input"
                         advanced_loop = False
+            elif selection == 'Export' or selection == 'export' or selection == 'e':
+                """
+                Start the exporting process
+                """
+                export_loop = False
+                while export_loop == False:
+                    os.system('cls')
+                    print "Exporting current build to the Configurations folder."
+                    file_name_loop = False
+                    while file_name_loop == False:
+                        file_name = raw_input('Save the configuration to what file name (.txt)? ')
+                        try:
+                            if file_name[-4:] != '.txt':
+                                raise SyntaxError()
+                            elif os.path.isfile(Configurations_path+file_name) == True:
+                                check = raw_input('This file already exists in the directory, overwrite <y/n>? ')
+                                if check == 'y':
+                                    file_name_loop = True
+                                else:
+                                    file_name_loop = False
+                            elif file_name == 'back':
+                                file_name_loop = True
+                                export_loop = True
+                            else:
+                                file_name_loop = True
+                        except SyntaxError:
+                            print "Filename must have .txt extension to save."
+                    print "Saving file to %s" % (Configurations_path + file_name)
+                    write_file = open(Configurations_path+file_name,'w').close() #Clears the file
+                    write_file = open(Configurations_path+file_name,'w')
+                    for i in charges:
+                        write_file.write('%s,%s,%s\n' % (str(i.x),str(i.y),str(i.charge)))
+                    write_file.close()
+                    print "File has been written to and saved."
+                    waiter = raw_input('Press any key to continue: ')
+                    export_loop = True
             elif selection == 'Import' or selection == 'import' or selection == 'i':
                 """
 
@@ -278,7 +382,7 @@ def get_inputs(base_charges, base_resolution):
                                     raise SyntaxError("Dataset improperly formatted")
                                 else:
                                     pass
-                                charges.append(Charge(int(temp_charge[0]), int(temp_charge[1]), int(temp_charge[2])))
+                                charges.append(Charge(float(temp_charge[0]), float(temp_charge[1]), float(temp_charge[2])))
                                 data_set.close()
                             print "File successfully imported"
                             file_selection_loop = True
@@ -297,9 +401,22 @@ def get_inputs(base_charges, base_resolution):
                     except WindowsError:
                         print "Configuration Path is incorrect, please reconfigure."
                         file_selection_loop = False
+            elif selection == 'Save' or selection == 'save' or selection == 's':
+                save_file_name_loop = False
+                while save_file_name_loop == False:
+                    try:
+                        fig1.savefig(image_directory+raw_input('Image name (.png): '))
+                        save_file_name_loop = True
+                    except IOError:
+                        print "Directory either doesn't exist, or filename is illegal."
+                        save_file_name_loop = False
             elif selection == 'Delete' or selection == 'delete' or selection == 'del':
                 try:
-                    del (charges[int(raw_input("Which charge do you wish to delete? ")) - 1])
+                    number = raw_input('Which charge do you wish to delete (all to clear)? ')
+                    if number == 'all':
+                        charges = []
+                    else:
+                        del (charges[int(number) - 1])
                 except ValueError:
                     print 'Error 0002: Input must be an integer.'
                     correct_input = False
